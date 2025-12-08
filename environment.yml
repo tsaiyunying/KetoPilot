@@ -1,0 +1,10 @@
+# 使用 conda 环境
+name: ketopilot
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - pandas>=2.0.0
+    - pyreadstat>=1.2.0
