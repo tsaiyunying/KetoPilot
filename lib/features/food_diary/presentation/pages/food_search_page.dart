@@ -4,11 +4,16 @@ import 'package:metabolicapp/features/food_diary/domain/entities/food_entry.dart
 import 'food_details_page.dart';
 
 class FoodSearchPage extends StatefulWidget {
-  final DateTime initialTime;
+  /// If viewOnly = true, search opens FoodDetailsPage in view mode and does NOT return FoodEntry.
+  final bool viewOnly;
+
+  /// Only used when viewOnly = false (add mode).
+  final DateTime? initialTime;
 
   const FoodSearchPage({
     super.key,
-    required this.initialTime,
+    this.viewOnly = false,
+    this.initialTime,
   });
 
   @override
@@ -28,6 +33,8 @@ class _FoodSearchPageState extends State<FoodSearchPage> {
 
     final foods = await FoodDatabaseService.searchFoods(query);
 
+    if (!mounted) return;
+
     setState(() {
       _results = foods;
       _loading = false;
@@ -35,9 +42,54 @@ class _FoodSearchPageState extends State<FoodSearchPage> {
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _openFood(Map<String, dynamic> food) async {
+    final int code = food["food_code"];
+    final String name = food["main_food_description"];
+
+    if (widget.viewOnly) {
+      // ✅ View-only: just push details, no return value
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => FoodDetailsPage(
+            foodCode: code,
+            foodName: name,
+            viewOnly: true,
+          ),
+        ),
+      );
+      return;
+    }
+
+    // ✅ Add-mode: push details and expect a FoodEntry back
+    final entry = await Navigator.push<FoodEntry>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FoodDetailsPage(
+          foodCode: code,
+          foodName: name,
+          viewOnly: false,
+          initialTime: widget.initialTime ?? DateTime.now(),
+        ),
+      ),
+    );
+
+    if (entry != null && mounted) {
+      Navigator.pop(context, entry);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Search Food")),
+      appBar: AppBar(
+        title: Text(widget.viewOnly ? "Search Food" : "Add Food"),
+      ),
       body: Column(
         children: [
           Padding(
@@ -63,25 +115,10 @@ class _FoodSearchPageState extends State<FoodSearchPage> {
               itemCount: _results.length,
               itemBuilder: (_, i) {
                 final food = _results[i];
-
                 return ListTile(
                   title: Text(food["main_food_description"]),
-                  onTap: () async {
-                    final entry = await Navigator.push<FoodEntry>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => FoodDetailsPage(
-                          foodCode: food["food_code"],
-                          foodName: food["main_food_description"],
-                          initialTime: widget.initialTime,
-                        ),
-                      ),
-                    );
-
-                    if (entry != null && mounted) {
-                      Navigator.pop(context, entry);
-                    }
-                  },
+                  subtitle: Text('ID: ${food["food_code"]}'),
+                  onTap: () => _openFood(food),
                 );
               },
             ),

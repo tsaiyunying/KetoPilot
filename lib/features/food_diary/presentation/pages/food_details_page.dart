@@ -6,13 +6,19 @@ import 'package:metabolicapp/features/food_diary/domain/entities/food_entry.dart
 class FoodDetailsPage extends StatefulWidget {
   final int foodCode;
   final String foodName;
-  final DateTime initialTime;
+
+  /// If viewOnly = true, we just show nutrients and DO NOT return a FoodEntry.
+  final bool viewOnly;
+
+  /// Only needed when viewOnly = false (add mode).
+  final DateTime? initialTime;
 
   const FoodDetailsPage({
     super.key,
     required this.foodCode,
     required this.foodName,
-    required this.initialTime,
+    this.viewOnly = false,
+    this.initialTime,
   });
 
   @override
@@ -26,12 +32,17 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
 
   bool _loading = true;
   Macronutrients? _macros;
+
+  // Only used for add mode
   late DateTime _time;
 
   @override
   void initState() {
     super.initState();
-    _time = widget.initialTime;
+
+    // In viewOnly mode, time is irrelevant; in add mode, we need a time.
+    _time = widget.initialTime ?? DateTime.now();
+
     _recalculate();
   }
 
@@ -39,10 +50,13 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
     setState(() => _loading = true);
 
     final grams = double.tryParse(_gramsController.text) ?? 100;
+
     final macros = await FoodDatabaseService.getMacrosForFoodEntry(
       widget.foodCode,
       grams,
     );
+
+    if (!mounted) return;
 
     setState(() {
       _macros = macros;
@@ -86,7 +100,15 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
   }
 
   @override
+  void dispose() {
+    _gramsController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final grams = double.tryParse(_gramsController.text) ?? 100;
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.foodName)),
       body: Padding(
@@ -102,34 +124,51 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
 
             const SizedBox(height: 12),
 
-            ElevatedButton.icon(
-              onPressed: _pickTime,
-              icon: const Icon(Icons.access_time),
-              label: const Text('Pick Time'),
-            ),
-
-            const SizedBox(height: 24),
+            // ✅ Only show time picker in ADD mode
+            if (!widget.viewOnly) ...[
+              ElevatedButton.icon(
+                onPressed: _pickTime,
+                icon: const Icon(Icons.access_time),
+                label: Text(
+                  'Time: ${TimeOfDay.fromDateTime(_time).format(context)}',
+                ),
+              ),
+              const SizedBox(height: 24),
+            ] else ...[
+              const SizedBox(height: 12),
+            ],
 
             if (_loading)
               const CircularProgressIndicator()
-            else
+            else if (_macros != null)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Calories: ${_macros!.calories} kcal'),
-                  Text('Protein: ${_macros!.protein} g'),
-                  Text('Fat: ${_macros!.fat} g'),
-                  Text('Net Carbs: ${_macros!.netCarbs} g'),
+                  Text(
+                    'For ${grams.toStringAsFixed(0)} g',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  Text('Calories: ${_macros!.calories.toStringAsFixed(0)} kcal'),
+                  Text('Protein: ${_macros!.protein.toStringAsFixed(1)} g'),
+                  Text('Fat: ${_macros!.fat.toStringAsFixed(1)} g'),
+                  Text('Net Carbs: ${_macros!.netCarbs.toStringAsFixed(1)} g'),
+                  Text('Fiber: ${_macros!.fiber.toStringAsFixed(1)} g'),
                 ],
               ),
 
             const Spacer(),
 
-            ElevatedButton.icon(
-              onPressed: _addToDiary,
-              icon: const Icon(Icons.add),
-              label: const Text('Add to Diary'),
-            ),
+            // ✅ Only show "Add to Diary" in ADD mode
+            if (!widget.viewOnly)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _addToDiary,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add to Diary'),
+                ),
+              ),
           ],
         ),
       ),

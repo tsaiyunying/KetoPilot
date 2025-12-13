@@ -14,9 +14,7 @@ class FoodDiaryPage extends StatefulWidget {
   State<FoodDiaryPage> createState() => _FoodDiaryPageState();
 }
 
-class _FoodDiaryPageState extends State<FoodDiaryPage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _FoodDiaryPageState extends State<FoodDiaryPage> {
   DateTime _selectedDate = DateTime.now();
 
   double _carbsConsumed = 0;
@@ -29,17 +27,23 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
 
   final List<_FoodEntryData> _todaysEntries = [];
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+  // ✅ View-only search (top-right icon)
+  void _searchFoodViewOnly() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const FoodSearchPage(viewOnly: true),
+      ),
+    );
   }
 
   Future<void> _addFoodAtTime(DateTime time) async {
     final entry = await Navigator.push<FoodEntry>(
       context,
       MaterialPageRoute(
-        builder: (_) => FoodSearchPage(initialTime: time),
+        builder: (_) => FoodSearchPage(
+          viewOnly: false,
+          initialTime: time,
+        ),
       ),
     );
 
@@ -49,7 +53,7 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
       _todaysEntries.add(
         _FoodEntryData(
           name: entry.name,
-          carbs: entry.macros.netCarbs,
+          carbs: entry.macros.netCarbs, // tracking net carbs
           protein: entry.macros.protein,
           fat: entry.macros.fat,
           calories: entry.macros.calories,
@@ -66,17 +70,51 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
 
   void _addFood() => _addFoodAtTime(DateTime.now());
 
+  Future<void> _selectDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now(),
+    );
+    if (date != null) {
+      setState(() => _selectedDate = date);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Food Diary')),
+      appBar: AppBar(
+        title: const Text('Food Diary'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: _selectDate,
+          ),
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: _searchFoodViewOnly, // ✅ view-only search
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addFood,
+        onPressed: _addFood, // ✅ add-mode
         backgroundColor: AppTheme.primaryColor,
         child: const Icon(Icons.add),
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                DateFormat('EEE, MMM d').format(_selectedDate),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+          ),
           MacroBarsWidget(
             carbsGrams: _carbsConsumed,
             proteinGrams: _proteinConsumed,
@@ -94,6 +132,12 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
   Widget _buildTimeline() {
     final sorted = [..._todaysEntries]
       ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+    if (sorted.isEmpty) {
+      return const Center(
+        child: Text('No entries yet. Tap + to add food.'),
+      );
+    }
 
     return ListView.builder(
       itemCount: sorted.length,
