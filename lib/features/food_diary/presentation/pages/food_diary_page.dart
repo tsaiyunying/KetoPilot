@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/themes/app_theme.dart';
 import '../widgets/macro_bars_widget.dart';
+import 'package:metabolicapp/features/food_diary/presentation/pages/food_search_page.dart';
 
 @RoutePage()
 class FoodDiaryPage extends StatefulWidget {
@@ -660,11 +661,9 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
   }
 
   void _searchFood() {
-    // TODO: Implement food search
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Food search coming soon!'),
-        backgroundColor: AppTheme.infoColor,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const FoodSearchPage(),
       ),
     );
   }

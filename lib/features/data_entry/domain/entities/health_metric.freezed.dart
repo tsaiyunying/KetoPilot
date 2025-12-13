@@ -27,12 +27,8 @@ mixin _$HealthMetric {
   String get unit => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
 
-  /// Serializes this HealthMetric to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of HealthMetric
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $HealthMetricCopyWith<HealthMetric> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -62,8 +58,6 @@ class _$HealthMetricCopyWithImpl<$Res, $Val extends HealthMetric>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of HealthMetric
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -128,8 +122,6 @@ class __$$HealthMetricImplCopyWithImpl<$Res>
       _$HealthMetricImpl _value, $Res Function(_$HealthMetricImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of HealthMetric
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -215,14 +207,12 @@ class _$HealthMetricImpl implements _HealthMetric {
             (identical(other.notes, notes) || other.notes == notes));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode =>
       Object.hash(runtimeType, id, timestamp, type, value, unit, notes);
 
-  /// Create a copy of HealthMetric
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$HealthMetricImplCopyWith<_$HealthMetricImpl> get copyWith =>
@@ -260,11 +250,8 @@ abstract class _HealthMetric implements HealthMetric {
   String get unit;
   @override
   String? get notes;
-
-  /// Create a copy of HealthMetric
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$HealthMetricImplCopyWith<_$HealthMetricImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -282,12 +269,8 @@ mixin _$GlucoseKetoneIndex {
   double get gkiValue => throw _privateConstructorUsedError;
   GkiStatus get status => throw _privateConstructorUsedError;
 
-  /// Serializes this GlucoseKetoneIndex to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of GlucoseKetoneIndex
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $GlucoseKetoneIndexCopyWith<GlucoseKetoneIndex> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -317,8 +300,6 @@ class _$GlucoseKetoneIndexCopyWithImpl<$Res, $Val extends GlucoseKetoneIndex>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of GlucoseKetoneIndex
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -383,8 +364,6 @@ class __$$GlucoseKetoneIndexImplCopyWithImpl<$Res>
       $Res Function(_$GlucoseKetoneIndexImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of GlucoseKetoneIndex
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -471,14 +450,12 @@ class _$GlucoseKetoneIndexImpl implements _GlucoseKetoneIndex {
             (identical(other.status, status) || other.status == status));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
       runtimeType, id, timestamp, glucose, ketones, gkiValue, status);
 
-  /// Create a copy of GlucoseKetoneIndex
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$GlucoseKetoneIndexImplCopyWith<_$GlucoseKetoneIndexImpl> get copyWith =>
@@ -517,11 +494,8 @@ abstract class _GlucoseKetoneIndex implements GlucoseKetoneIndex {
   double get gkiValue;
   @override
   GkiStatus get status;
-
-  /// Create a copy of GlucoseKetoneIndex
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$GlucoseKetoneIndexImplCopyWith<_$GlucoseKetoneIndexImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

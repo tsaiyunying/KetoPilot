@@ -30,12 +30,8 @@ mixin _$FoodEntry {
   String? get brand => throw _privateConstructorUsedError;
   String? get mealType => throw _privateConstructorUsedError;
 
-  /// Serializes this FoodEntry to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of FoodEntry
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $FoodEntryCopyWith<FoodEntry> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -69,8 +65,6 @@ class _$FoodEntryCopyWithImpl<$Res, $Val extends FoodEntry>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of FoodEntry
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -124,8 +118,6 @@ class _$FoodEntryCopyWithImpl<$Res, $Val extends FoodEntry>
     ) as $Val);
   }
 
-  /// Create a copy of FoodEntry
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $MacronutrientsCopyWith<$Res> get macros {
@@ -166,8 +158,6 @@ class __$$FoodEntryImplCopyWithImpl<$Res>
       _$FoodEntryImpl _value, $Res Function(_$FoodEntryImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of FoodEntry
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -283,14 +273,12 @@ class _$FoodEntryImpl implements _FoodEntry {
                 other.mealType == mealType));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, id, name, timestamp, servingSize,
       servingUnit, macros, notes, brand, mealType);
 
-  /// Create a copy of FoodEntry
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$FoodEntryImplCopyWith<_$FoodEntryImpl> get copyWith =>
@@ -337,11 +325,8 @@ abstract class _FoodEntry implements FoodEntry {
   String? get brand;
   @override
   String? get mealType;
-
-  /// Create a copy of FoodEntry
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$FoodEntryImplCopyWith<_$FoodEntryImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -360,12 +345,8 @@ mixin _$Macronutrients {
       throw _privateConstructorUsedError; // in grams (carbs - fiber)
   double get calories => throw _privateConstructorUsedError;
 
-  /// Serializes this Macronutrients to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of Macronutrients
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $MacronutrientsCopyWith<Macronutrients> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -395,8 +376,6 @@ class _$MacronutrientsCopyWithImpl<$Res, $Val extends Macronutrients>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of Macronutrients
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -461,8 +440,6 @@ class __$$MacronutrientsImplCopyWithImpl<$Res>
       _$MacronutrientsImpl _value, $Res Function(_$MacronutrientsImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of Macronutrients
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -554,14 +531,12 @@ class _$MacronutrientsImpl implements _Macronutrients {
                 other.calories == calories));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode =>
       Object.hash(runtimeType, carbs, protein, fat, fiber, netCarbs, calories);
 
-  /// Create a copy of Macronutrients
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$MacronutrientsImplCopyWith<_$MacronutrientsImpl> get copyWith =>
@@ -589,22 +564,19 @@ abstract class _Macronutrients implements Macronutrients {
       _$MacronutrientsImpl.fromJson;
 
   @override
-  double get carbs; // in grams
-  @override
-  double get protein; // in grams
-  @override
-  double get fat; // in grams
-  @override
-  double get fiber; // in grams
-  @override
-  double get netCarbs; // in grams (carbs - fiber)
-  @override
+  double get carbs;
+  @override // in grams
+  double get protein;
+  @override // in grams
+  double get fat;
+  @override // in grams
+  double get fiber;
+  @override // in grams
+  double get netCarbs;
+  @override // in grams (carbs - fiber)
   double get calories;
-
-  /// Create a copy of Macronutrients
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$MacronutrientsImplCopyWith<_$MacronutrientsImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -620,12 +592,8 @@ mixin _$DailyMacros {
   Macronutrients get targets => throw _privateConstructorUsedError;
   List<FoodEntry> get entries => throw _privateConstructorUsedError;
 
-  /// Serializes this DailyMacros to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of DailyMacros
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $DailyMacrosCopyWith<DailyMacros> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -656,8 +624,6 @@ class _$DailyMacrosCopyWithImpl<$Res, $Val extends DailyMacros>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of DailyMacros
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -686,8 +652,6 @@ class _$DailyMacrosCopyWithImpl<$Res, $Val extends DailyMacros>
     ) as $Val);
   }
 
-  /// Create a copy of DailyMacros
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $MacronutrientsCopyWith<$Res> get consumed {
@@ -696,8 +660,6 @@ class _$DailyMacrosCopyWithImpl<$Res, $Val extends DailyMacros>
     });
   }
 
-  /// Create a copy of DailyMacros
-  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $MacronutrientsCopyWith<$Res> get targets {
@@ -735,8 +697,6 @@ class __$$DailyMacrosImplCopyWithImpl<$Res>
       _$DailyMacrosImpl _value, $Res Function(_$DailyMacrosImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of DailyMacros
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -810,14 +770,12 @@ class _$DailyMacrosImpl implements _DailyMacros {
             const DeepCollectionEquality().equals(other._entries, _entries));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, date, consumed, targets,
       const DeepCollectionEquality().hash(_entries));
 
-  /// Create a copy of DailyMacros
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$DailyMacrosImplCopyWith<_$DailyMacrosImpl> get copyWith =>
@@ -849,11 +807,8 @@ abstract class _DailyMacros implements DailyMacros {
   Macronutrients get targets;
   @override
   List<FoodEntry> get entries;
-
-  /// Create a copy of DailyMacros
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$DailyMacrosImplCopyWith<_$DailyMacrosImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

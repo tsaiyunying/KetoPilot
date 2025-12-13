@@ -28,6 +28,9 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  path_provider: ^2.1.1
+  path: ^1.8.3
+
   flutter:
     sdk: flutter
 
@@ -69,7 +72,7 @@ dependencies:
   uuid: ^4.2.1
   
   # Local notifications
-  flutter_local_notifications: ^16.3.0
+  flutter_local_notifications: ^17.2.1
   
   # Permissions
   permission_handler: ^11.1.0
@@ -108,6 +111,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/usda_foods.db
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
