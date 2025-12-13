@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:metabolicapp/core/themes/app_theme.dart';
+import 'package:metabolicapp/core/state/weekly_log_provider.dart';
+import 'package:metabolicapp/core/state/daily_log_provider.dart';
 
-class WeeklyMoleculesWidget extends StatelessWidget {
+class WeeklyMoleculesWidget extends ConsumerWidget {
   const WeeklyMoleculesWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final week = ref.watch(weeklyLogProvider).days;
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildLegend(),
           const SizedBox(height: 16),
-          _buildChart(),
+          _buildChart(week),
           const SizedBox(height: 16),
-          _buildSummary(),
+          _buildSummary(week),
         ],
       ),
     );
@@ -49,9 +53,7 @@ class WeeklyMoleculesWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildChart() {
-    final weekData = _getWeekData();
-
+  Widget _buildChart(List<DailyLogState> week) {
     return Container(
       height: 140,
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -60,17 +62,17 @@ class WeeklyMoleculesWidget extends StatelessWidget {
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: weekData.map((dayData) {
-                return Expanded(child: _buildDayBar(dayData));
+              children: week.map((day) {
+                return Expanded(child: _buildDayBar(day));
               }).toList(),
             ),
           ),
           const SizedBox(height: 8),
           Row(
-            children: weekData.map((dayData) {
+            children: week.map((day) {
               return Expanded(
                 child: Text(
-                  dayData['day'],
+                  _weekdayLabel(day.date),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 10,
@@ -85,10 +87,10 @@ class WeeklyMoleculesWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDayBar(Map<String, dynamic> dayData) {
-    final double glucose = dayData['glucose'];
-    final double bhb = dayData['bhb'];
-    final double gki = dayData['gki'];
+  Widget _buildDayBar(DailyLogState day) {
+    final double glucose = day.glucoseMgDl;
+    final double bhb = day.bhbMmol;
+    final double gki = day.gki;
 
     // Normalize values for visualization
     final double normalizedGlucose = (glucose / 150 * 80).clamp(4.0, 80.0);
@@ -137,14 +139,11 @@ class WeeklyMoleculesWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildSummary() {
-    final weekData = _getWeekData();
+  Widget _buildSummary(List<DailyLogState> week) {
     final avgGlucose =
-        weekData.map((d) => d['glucose'] as double).reduce((a, b) => a + b) / 7;
-    final avgBhb =
-        weekData.map((d) => d['bhb'] as double).reduce((a, b) => a + b) / 7;
-    final avgGki =
-        weekData.map((d) => d['gki'] as double).reduce((a, b) => a + b) / 7;
+        week.map((d) => d.glucoseMgDl).fold(0.0, (a, b) => a + b) / 7;
+    final avgBhb = week.map((d) => d.bhbMmol).fold(0.0, (a, b) => a + b) / 7;
+    final avgGki = week.map((d) => d.gki).fold(0.0, (a, b) => a + b) / 7;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -249,15 +248,23 @@ class WeeklyMoleculesWidget extends StatelessWidget {
     );
   }
 
-  List<Map<String, dynamic>> _getWeekData() {
-    return [
-      {'day': 'Mon', 'glucose': 95.0, 'bhb': 1.2, 'gki': 2.1},
-      {'day': 'Tue', 'glucose': 88.0, 'bhb': 1.8, 'gki': 1.3},
-      {'day': 'Wed', 'glucose': 92.0, 'bhb': 1.5, 'gki': 1.6},
-      {'day': 'Thu', 'glucose': 86.0, 'bhb': 2.1, 'gki': 1.1},
-      {'day': 'Fri', 'glucose': 98.0, 'bhb': 1.0, 'gki': 2.6},
-      {'day': 'Sat', 'glucose': 85.0, 'bhb': 2.3, 'gki': 1.0},
-      {'day': 'Sun', 'glucose': 90.0, 'bhb': 1.7, 'gki': 1.4},
-    ];
+  String _weekdayLabel(DateTime date) {
+    switch (date.weekday) {
+      case DateTime.monday:
+        return 'Mon';
+      case DateTime.tuesday:
+        return 'Tue';
+      case DateTime.wednesday:
+        return 'Wed';
+      case DateTime.thursday:
+        return 'Thu';
+      case DateTime.friday:
+        return 'Fri';
+      case DateTime.saturday:
+        return 'Sat';
+      case DateTime.sunday:
+      default:
+        return 'Sun';
+    }
   }
 }
