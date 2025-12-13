@@ -1,7 +1,8 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/app_constants.dart';
+import '../../../../core/state/daily_log_provider.dart';
 import '../../../../core/themes/app_theme.dart';
 import '../../../../shared/widgets/app_drawer.dart';
 import '../../../food_diary/presentation/widgets/macro_bars_widget.dart';
@@ -11,14 +12,14 @@ import '../widgets/weekly_nutrition_widget.dart';
 import '../widgets/weekly_molecules_widget.dart';
 
 @RoutePage()
-class DashboardPage extends StatefulWidget {
+class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
+  ConsumerState<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageState extends ConsumerState<DashboardPage> {
   int _selectedIndex = 0;
 
   @override
@@ -520,13 +521,18 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildMacroPreviewSection() {
+    final log = ref.watch(dailyLogProvider);
+    final glucose = log.glucoseMgDl;
+    final bhb = log.bhbMmol;
+    final gki = log.gki;
+
     return Column(
       children: [
         // Swipeable Nutrition Section (Daily/Weekly)
         SwipeableSectionWidget(
           title: 'Nutrition',
           dailyWidget: MacroBarsWidget(
-            carbsGrams: 11.0, // Example values from the slide
+            carbsGrams: 11.0, // Sample values
             proteinGrams: 75.0,
             fatGrams: 50.0,
             carbsLimit: 20.0, // Using new parameter names
@@ -547,9 +553,9 @@ class _DashboardPageState extends State<DashboardPage> {
         SwipeableSectionWidget(
           title: 'Biomarkers',
           dailyWidget: MoleculeBarsWidget(
-            glucoseMgDl: 85.0, // Example values
-            bhbMmol: 1.2,
-            gki: 4.1,
+            glucoseMgDl: glucose,
+            bhbMmol: bhb,
+            gki: gki,
             glucoseTarget: 100.0,
             bhbTarget: 1.5,
             gkiTarget: 1.0,
