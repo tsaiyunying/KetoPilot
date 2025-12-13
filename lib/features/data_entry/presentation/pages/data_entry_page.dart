@@ -1,18 +1,21 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/themes/app_theme.dart';
+import '../../../../core/state/daily_log_provider.dart';
+import '../../../../core/state/weekly_log_provider.dart';
 import '../../../../shared/widgets/app_drawer.dart';
 
 @RoutePage()
-class DataEntryPage extends StatefulWidget {
+class DataEntryPage extends ConsumerStatefulWidget {
   const DataEntryPage({super.key});
 
   @override
-  State<DataEntryPage> createState() => _DataEntryPageState();
+  ConsumerState<DataEntryPage> createState() => _DataEntryPageState();
 }
 
-class _DataEntryPageState extends State<DataEntryPage>
+class _DataEntryPageState extends ConsumerState<DataEntryPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -481,7 +484,24 @@ class _DataEntryPageState extends State<DataEntryPage>
   }
 
   void _saveData(bool isNutrition) {
-    // TODO: Implement actual data saving logic
+    if (!isNutrition) {
+      final glucose = _parseDouble(_glucoseController.text);
+      final bhb = _parseDouble(_bhbController.text);
+      final weightText = _weightController.text.trim();
+      final weight = weightText.isEmpty ? null : _parseDouble(weightText);
+
+      ref.read(dailyLogProvider.notifier).setBiomarkers(
+            glucoseMgDl: glucose,
+            bhbMmol: bhb,
+            weightKg: weight,
+          );
+      ref.read(weeklyLogProvider.notifier).upsertBiomarkersForToday(
+            glucoseMgDl: glucose,
+            bhbMmol: bhb,
+            weightKg: weight,
+          );
+    }
+
     String message = isNutrition
         ? 'Nutrition data saved successfully!'
         : 'Biomarker data saved successfully!';
@@ -518,6 +538,8 @@ class _DataEntryPageState extends State<DataEntryPage>
       _glucoseController.clear();
       _bhbController.clear();
       _weightController.clear();
+      ref.read(dailyLogProvider.notifier).clearBiomarkers();
+      ref.read(weeklyLogProvider.notifier).clearBiomarkersForToday();
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -526,5 +548,11 @@ class _DataEntryPageState extends State<DataEntryPage>
         duration: Duration(seconds: 1),
       ),
     );
+  }
+
+  double _parseDouble(String input) {
+    final normalized = input.trim();
+    if (normalized.isEmpty) return 0;
+    return double.tryParse(normalized) ?? 0;
   }
 }
