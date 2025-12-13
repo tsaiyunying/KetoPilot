@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:metabolicapp/services/food_database_service.dart';
+import 'package:metabolicapp/features/food_diary/domain/entities/food_entry.dart';
 import 'food_details_page.dart';
 
 class FoodSearchPage extends StatefulWidget {
-  const FoodSearchPage({Key? key}) : super(key: key);
+  final DateTime initialTime;
+
+  const FoodSearchPage({
+    super.key,
+    required this.initialTime,
+  });
 
   @override
   State<FoodSearchPage> createState() => _FoodSearchPageState();
@@ -35,46 +41,51 @@ class _FoodSearchPageState extends State<FoodSearchPage> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(12),
             child: TextField(
               controller: _controller,
               decoration: InputDecoration(
-                hintText: "Search for foods (egg, chicken...)",
+                hintText: "Search foods (egg, chicken...)",
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.search),
                   onPressed: _search,
                 ),
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
               onSubmitted: (_) => _search(),
             ),
           ),
 
-          if (_loading)
-            const LinearProgressIndicator(),
+          if (_loading) const LinearProgressIndicator(),
 
           Expanded(
             child: ListView.builder(
               itemCount: _results.length,
               itemBuilder: (_, i) {
-                final f = _results[i];
+                final food = _results[i];
+
                 return ListTile(
-                  title: Text(f["main_food_description"]),
-                  subtitle: Text("ID: ${f["food_code"]}"),
-                  onTap: () {
-                    Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (_) => FoodDetailsPage(
-                                foodCode: f["food_code"],
-                                foodName: f["main_food_description"],
-                            ),
+                  title: Text(food["main_food_description"]),
+                  onTap: () async {
+                    final entry = await Navigator.push<FoodEntry>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FoodDetailsPage(
+                          foodCode: food["food_code"],
+                          foodName: food["main_food_description"],
+                          initialTime: widget.initialTime,
                         ),
+                      ),
                     );
+
+                    if (entry != null && mounted) {
+                      Navigator.pop(context, entry);
+                    }
                   },
                 );
               },
             ),
-          )
+          ),
         ],
       ),
     );
