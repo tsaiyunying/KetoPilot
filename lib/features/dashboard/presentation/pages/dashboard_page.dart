@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/state/daily_log_provider.dart';
+import '../../../../core/state/nutrition_log_provider.dart'; // ✅ add
 import '../../../../core/themes/app_theme.dart';
 import '../../../../shared/widgets/app_drawer.dart';
 import '../../../food_diary/presentation/widgets/macro_bars_widget.dart';
@@ -55,11 +56,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               _buildWelcomeSection(),
               _buildGkiCard(),
               _buildQuickActionsGrid(),
-              _buildMacroPreviewSection(),
+              _buildMacroPreviewSection(), // ✅ now dynamic
               _buildQuickMetricsSection(),
               _buildRecentReadingsSection(),
               _buildEducationSection(),
-              const SizedBox(height: 100), // Space for FAB
+              const SizedBox(height: 100),
             ],
           ),
         ),
@@ -191,11 +192,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   children: [
                     Text(
                       'Good Morning, John!',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -274,7 +274,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   Widget _buildGkiCard() {
-    // Mock data - in real app this would come from state management
     const double glucose = 85.0;
     const double ketones = 1.2;
     const double gki = glucose / (ketones * 18.0);
@@ -305,9 +304,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 const SizedBox(width: 12),
                 Text(
                   'Glucose-Ketone Index',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
                 IconButton(
@@ -334,11 +334,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   children: [
                     Text(
                       gki.toStringAsFixed(1),
-                      style: Theme.of(context).textTheme.headlineLarge
-                          ?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: getGkiColor(),
-                          ),
+                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: getGkiColor(),
+                      ),
                     ),
                     Text(
                       getGkiStatus(),
@@ -405,9 +404,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondaryColor),
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: AppTheme.textSecondaryColor),
           ),
         ],
       ),
@@ -422,9 +422,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         children: [
           Text(
             'Quick Actions',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           GridView.count(
@@ -520,24 +521,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
+  // ✅ ONLY change: read targets/totals from nutritionLogProvider
   Widget _buildMacroPreviewSection() {
     final log = ref.watch(dailyLogProvider);
     final glucose = log.glucoseMgDl;
     final bhb = log.bhbMmol;
     final gki = log.gki;
 
+    final nutrition = ref.watch(nutritionLogProvider);
+
     return Column(
       children: [
-        // Swipeable Nutrition Section (Daily/Weekly)
         SwipeableSectionWidget(
           title: 'Nutrition',
           dailyWidget: MacroBarsWidget(
-            carbsGrams: 11.0, // Sample values
-            proteinGrams: 75.0,
-            fatGrams: 50.0,
-            carbsLimit: 20.0, // Using new parameter names
-            proteinGoal: 80.0,
-            fatGoal: 45.0,
+            carbsGrams: nutrition.carbsConsumed,
+            proteinGrams: nutrition.proteinConsumed,
+            fatGrams: nutrition.fatConsumed,
+            carbsLimit: nutrition.carbsTarget,
+            proteinGoal: nutrition.proteinTarget,
+            fatGoal: nutrition.fatTarget,
             maxBarHeight: 120.0,
             showTargetLines: true,
             showValues: true,
@@ -546,10 +549,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           actionText: 'Food Diary',
           onActionTap: () => context.router.pushNamed('/food-diary'),
         ),
-
         const SizedBox(height: 8),
-
-        // Swipeable Molecules Section (Daily/Weekly)
         SwipeableSectionWidget(
           title: 'Biomarkers',
           dailyWidget: MoleculeBarsWidget(
@@ -571,6 +571,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
+  // everything below unchanged...
   Widget _buildQuickMetricsSection() {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -581,9 +582,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             children: [
               Text(
                 'Today\'s Metrics',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const Spacer(),
               TextButton(
@@ -689,9 +691,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             children: [
               Text(
                 'Recent Readings',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const Spacer(),
               TextButton(
@@ -752,19 +755,22 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         ),
         title: Text(
           time,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+          style: Theme.of(context)
+              .textTheme
+              .bodyLarge
+              ?.copyWith(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
           'Glucose: ${glucose.toStringAsFixed(0)} mg/dL • Ketones: ${ketones.toStringAsFixed(1)} mmol/L',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryColor),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppTheme.textSecondaryColor,
+          ),
         ),
         trailing: Icon(
           gki <= 3.0 ? Icons.check_circle : Icons.info,
-          color: gki <= 3.0 ? AppTheme.optimalColor : AppTheme.therapeuticColor,
+          color: gki <= 3.0
+              ? AppTheme.optimalColor
+              : AppTheme.therapeuticColor,
         ),
       ),
     );
@@ -778,9 +784,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         children: [
           Text(
             'Learn More',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Card(
@@ -807,14 +814,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                       children: [
                         Text(
                           'Understanding Your GKI',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Learn how to interpret your glucose-ketone index for optimal health.',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: AppTheme.textSecondaryColor),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.textSecondaryColor,
+                          ),
                         ),
                       ],
                     ),
@@ -836,13 +845,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   void _navigateToIndex(int index) {
     switch (index) {
       case 0:
-        // Already on dashboard
         break;
       case 1:
         context.router.pushNamed('/food-diary');
         break;
       case 2:
-        // TODO: Navigate to trends/analytics
+      // TODO: Navigate to trends/analytics
         break;
       case 3:
         context.router.pushNamed('/settings');

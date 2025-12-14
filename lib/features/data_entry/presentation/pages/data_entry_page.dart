@@ -7,6 +7,9 @@ import '../../../../core/state/daily_log_provider.dart';
 import '../../../../core/state/weekly_log_provider.dart';
 import '../../../../shared/widgets/app_drawer.dart';
 
+// ✅ ADD THIS IMPORT
+import '../../../../core/state/nutrition_log_provider.dart';
+
 @RoutePage()
 class DataEntryPage extends ConsumerStatefulWidget {
   const DataEntryPage({super.key});
@@ -300,13 +303,13 @@ class _DataEntryPageState extends ConsumerState<DataEntryPage>
   }
 
   Widget _buildMacroInputCard(
-    String label,
-    String unit,
-    TextEditingController controller,
-    Color color,
-    String target,
-    IconData icon,
-  ) {
+      String label,
+      String unit,
+      TextEditingController controller,
+      Color color,
+      String target,
+      IconData icon,
+      ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -372,13 +375,13 @@ class _DataEntryPageState extends ConsumerState<DataEntryPage>
   }
 
   Widget _buildBiomarkerInputCard(
-    String label,
-    String unit,
-    TextEditingController controller,
-    Color color,
-    String target,
-    IconData icon,
-  ) {
+      String label,
+      String unit,
+      TextEditingController controller,
+      Color color,
+      String target,
+      IconData icon,
+      ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -483,27 +486,39 @@ class _DataEntryPageState extends ConsumerState<DataEntryPage>
     );
   }
 
+  // ✅ ONLY MODIFIED THIS METHOD
   void _saveData(bool isNutrition) {
-    if (!isNutrition) {
+    if (isNutrition) {
+      // Treat these as TARGETS (daily goals) shown as "/ XXg" on dashboard
+      final carbsTarget = _parseDouble(_carbsController.text);
+      final proteinTarget = _parseDouble(_proteinController.text);
+      final fatTarget = _parseDouble(_fatController.text);
+
+      ref.read(nutritionLogProvider.notifier).setTargets(
+        carbs: carbsTarget,
+        protein: proteinTarget,
+        fat: fatTarget,
+      );
+    } else {
       final glucose = _parseDouble(_glucoseController.text);
       final bhb = _parseDouble(_bhbController.text);
       final weightText = _weightController.text.trim();
       final weight = weightText.isEmpty ? null : _parseDouble(weightText);
 
       ref.read(dailyLogProvider.notifier).setBiomarkers(
-            glucoseMgDl: glucose,
-            bhbMmol: bhb,
-            weightKg: weight,
-          );
+        glucoseMgDl: glucose,
+        bhbMmol: bhb,
+        weightKg: weight,
+      );
       ref.read(weeklyLogProvider.notifier).upsertBiomarkersForToday(
-            glucoseMgDl: glucose,
-            bhbMmol: bhb,
-            weightKg: weight,
-          );
+        glucoseMgDl: glucose,
+        bhbMmol: bhb,
+        weightKg: weight,
+      );
     }
 
     String message = isNutrition
-        ? 'Nutrition data saved successfully!'
+        ? 'Nutrition targets saved successfully!'
         : 'Biomarker data saved successfully!';
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -529,11 +544,19 @@ class _DataEntryPageState extends ConsumerState<DataEntryPage>
     }
   }
 
+  // ✅ ONLY MODIFIED THIS METHOD (optional but recommended)
   void _clearData(bool isNutrition) {
     if (isNutrition) {
       _carbsController.clear();
       _proteinController.clear();
       _fatController.clear();
+
+      // reset targets back to defaults (or set to 0 if you prefer)
+      ref.read(nutritionLogProvider.notifier).setTargets(
+        carbs: 20,
+        protein: 100,
+        fat: 150,
+      );
     } else {
       _glucoseController.clear();
       _bhbController.clear();
