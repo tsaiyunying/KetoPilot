@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:metabolicapp/features/food_diary/domain/entities/food_entry.dart';
+import '../../services/food_database_service.dart';
 
 @immutable
 class NutritionLogState {
@@ -55,7 +56,10 @@ class NutritionLogState {
 
 class NutritionLogNotifier extends StateNotifier<NutritionLogState> {
   NutritionLogNotifier()
-      : super(NutritionLogState(date: DateUtils.dateOnly(DateTime.now())));
+      : super(NutritionLogState(date: DateUtils.dateOnly(DateTime.now()))) {
+    // Initial load
+    loadDate(state.date);
+  }
 
   void setTargets({
     required double carbs,
@@ -69,20 +73,33 @@ class NutritionLogNotifier extends StateNotifier<NutritionLogState> {
     );
   }
 
-  void addEntry(FoodEntry entry) {
-    final next = [...state.entries, entry]
-      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
-    state = state.copyWith(entries: next);
+  Future<void> loadDate(DateTime date) async {
+    final cleanDate = DateUtils.dateOnly(date);
+    // You might want to set a loading state here if the UI supports it
+    final entries = await FoodDatabaseService.getDiaryEntries(cleanDate);
+    state = state.copyWith(date: cleanDate, entries: entries);
   }
 
-  void removeEntry(String id) {
-    state = state.copyWith(
-      entries: state.entries.where((e) => e.id != id).toList(),
-    );
+  Future<void> addEntry(FoodEntry entry) async {
+    await FoodDatabaseService.addDiaryEntry(entry);
+    // Reload to ensure sync and sort order
+    await loadDate(state.date);
   }
 
-  void clearDay() {
-    state = state.copyWith(entries: const []);
+  Future<void> removeEntry(String id) async {
+    await FoodDatabaseService.deleteDiaryEntry(id);
+    await loadDate(state.date);
+  }
+
+  Future<void> clearDay() async {
+    // Ideally delete all for day, but for now just clear local state 
+    // or implement a deleteForDay in service if needed.
+    // For this MVP, we iterate delete or just set empty if persistence of clearing isn't critical yet.
+    // Let's implement correct deletion:
+    for (var e in state.entries) {
+      await FoodDatabaseService.deleteDiaryEntry(e.id);
+    }
+    await loadDate(state.date);
   }
 }
 

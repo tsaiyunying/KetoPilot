@@ -17,17 +17,66 @@ class FoodDatabaseService {
     final dbDir = await getDatabasesPath();
     final dbPath = p.join(dbDir, _dbName);
 
-    final exists = await File(dbPath).exists();
-    if (!exists) {
+    Future<void> copyFromAsset() async {
       await Directory(dbDir).create(recursive: true);
       final data = await rootBundle.load("assets/$_dbName");
       final bytes =
-      data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
       await File(dbPath).writeAsBytes(bytes, flush: true);
     }
 
-    _db = await openDatabase(dbPath, readOnly: true);
+    if (!await File(dbPath).exists()) {
+      await copyFromAsset();
+    }
+
+    try {
+      _db = await openDatabase(
+        dbPath,
+        readOnly: false,
+        onOpen: (db) async {
+          await _initUserTables(db);
+        },
+      );
+    } catch (e) {
+      // ✅ Handle case where old DB was read-only
+      if (e.toString().contains('readonly') || e.toString().contains('READONLY')) {
+        print("⚠️ Database read-only error detected. Recreating database...");
+        await File(dbPath).delete();
+        await copyFromAsset();
+
+        _db = await openDatabase(
+          dbPath,
+          readOnly: false,
+          onOpen: (db) async {
+            await _initUserTables(db);
+          },
+        );
+      } else {
+        rethrow;
+      }
+    }
     return _db!;
+  }
+
+  static Future<void> _initUserTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS food_diary (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        timestamp_ms INTEGER NOT NULL,
+        serving_size REAL NOT NULL,
+        serving_unit TEXT NOT NULL,
+        calories REAL NOT NULL,
+        carbs REAL NOT NULL,
+        protein REAL NOT NULL,
+        fat REAL NOT NULL,
+        fiber REAL NOT NULL,
+        net_carbs REAL NOT NULL,
+        notes TEXT,
+        brand TEXT,
+        meal_type TEXT
+      )
+    ''');
   }
 
   /// Search foods by name
@@ -163,5 +212,73 @@ class FoodDatabaseService {
       netCarbs: netCarbs,
       calories: all['ENERC_KCAL'] ?? 0.0,
     );
+  }
+
+  // ─── USER DIARY METHODS ──────────────────────────────────────────────
+
+  static Future<void> addDiaryEntry(FoodEntry entry) async {
+    final db = await database;
+    await db.insert(
+      'food_diary',
+      {
+        'id': entry.id,
+        'name': entry.name,
+        'timestamp_ms': entry.timestamp.millisecondsSinceEpoch,
+        'serving_size': entry.servingSize,
+        'serving_unit': entry.servingUnit,
+        'calories': entry.macros.calories,
+        'carbs': entry.macros.carbs,
+        'protein': entry.macros.protein,
+        'fat': entry.macros.fat,
+        'fiber': entry.macros.fiber,
+        'net_carbs': entry.macros.netCarbs,
+        'notes': entry.notes,
+        'brand': entry.brand,
+        'meal_type': entry.mealType,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  static Future<void> deleteDiaryEntry(String id) async {
+    final db = await database;
+    await db.delete('food_diary', where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Get entries for a specific day
+  static Future<List<FoodEntry>> getDiaryEntries(DateTime date) async {
+    final db = await database;
+    
+    // Filter by START and END of the local day
+    final start = DateTime(date.year, date.month, date.day).millisecondsSinceEpoch;
+    final end = DateTime(date.year, date.month, date.day, 23, 59, 59, 999).millisecondsSinceEpoch;
+
+    final maps = await db.query(
+      'food_diary',
+      where: 'timestamp_ms BETWEEN ? AND ?',
+      whereArgs: [start, end],
+      orderBy: 'timestamp_ms ASC',
+    );
+
+    return maps.map((m) {
+      return FoodEntry(
+        id: m['id'] as String,
+        name: m['name'] as String,
+        timestamp: DateTime.fromMillisecondsSinceEpoch(m['timestamp_ms'] as int),
+        servingSize: m['serving_size'] as double,
+        servingUnit: m['serving_unit'] as String,
+        macros: Macronutrients(
+          carbs: m['carbs'] as double,
+          protein: m['protein'] as double,
+          fat: m['fat'] as double,
+          fiber: m['fiber'] as double,
+          netCarbs: m['net_carbs'] as double,
+          calories: m['calories'] as double,
+        ),
+        notes: m['notes'] as String?,
+        brand: m['brand'] as String?,
+        mealType: m['meal_type'] as String?,
+      );
+    }).toList();
   }
 }

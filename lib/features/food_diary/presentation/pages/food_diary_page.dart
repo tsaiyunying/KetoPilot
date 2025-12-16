@@ -20,10 +20,15 @@ class FoodDiaryPage extends ConsumerStatefulWidget {
 }
 
 class _FoodDiaryPageState extends ConsumerState<FoodDiaryPage> {
+  // Local date state synced with provider
   DateTime _selectedDate = DateTime.now();
 
-  // Keep your local timeline list (no UI change)
-  final List<_FoodEntryData> _todaysEntries = [];
+  @override
+  void initState() {
+    super.initState();
+    // Ensure provider is loaded for today (or sync)
+    // Defer to next frame to avoid build conflicts if needed, but provider init handles today.
+  }
 
   // ✅ View-only search (top-right icon)
   void _searchFoodViewOnly() {
@@ -48,22 +53,8 @@ class _FoodDiaryPageState extends ConsumerState<FoodDiaryPage> {
     if (entry == null) return;
 
     // ✅ 1) Update global nutrition provider (Dashboard + this page's bars read it)
-    ref.read(nutritionLogProvider.notifier).addEntry(entry);
-
-    // ✅ 2) Keep your local timeline UI updated
-    setState(() {
-      _todaysEntries.add(
-        _FoodEntryData(
-          name: entry.name,
-          carbs: entry.macros.netCarbs, // net carbs
-          protein: entry.macros.protein,
-          fat: entry.macros.fat,
-          calories: entry.macros.calories,
-          timestamp: entry.timestamp,
-          servingSize: '${entry.servingSize} ${entry.servingUnit}',
-        ),
-      );
-    });
+    await ref.read(nutritionLogProvider.notifier).addEntry(entry);
+    // No local set state needed, provider updates UI
   }
 
   void _addFood() => _addFoodAtTime(DateTime.now());
@@ -77,9 +68,8 @@ class _FoodDiaryPageState extends ConsumerState<FoodDiaryPage> {
     );
     if (date != null) {
       setState(() => _selectedDate = date);
-
-      // OPTIONAL: if you support multi-day logs later,
-      // you would load that day's entries/provider state here.
+      // ✅ Update provider to load selected date
+      await ref.read(nutritionLogProvider.notifier).loadDate(date);
     }
   }
 
@@ -114,7 +104,7 @@ class _FoodDiaryPageState extends ConsumerState<FoodDiaryPage> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                DateFormat('EEE, MMM d').format(_selectedDate),
+                DateFormat('EEE, MMM d').format(nutrition.date), // Use provider date
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
@@ -130,54 +120,33 @@ class _FoodDiaryPageState extends ConsumerState<FoodDiaryPage> {
             fatGoal: nutrition.fatTarget,
           ),
 
-          Expanded(child: _buildTimeline()),
+          Expanded(child: _buildTimeline(nutrition.entries)),
         ],
       ),
     );
   }
 
-  Widget _buildTimeline() {
-    final sorted = [..._todaysEntries]
-      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
-
-    if (sorted.isEmpty) {
+  Widget _buildTimeline(List<FoodEntry> entries) {
+    if (entries.isEmpty) {
       return const Center(
         child: Text('No entries yet. Tap + to add food.'),
       );
     }
 
     return ListView.builder(
-      itemCount: sorted.length,
+      itemCount: entries.length,
       itemBuilder: (_, i) {
-        final e = sorted[i];
+        final e = entries[i];
         return ListTile(
           title: Text(e.name),
           subtitle: Text(
-            '${DateFormat('h:mm a').format(e.timestamp)} • ${e.servingSize}',
+            '${DateFormat('h:mm a').format(e.timestamp)} • ${e.servingSize} ${e.servingUnit}',
           ),
-          trailing: Text('${e.calories.toStringAsFixed(0)} kcal'),
+          trailing: Text('${e.macros.calories.toStringAsFixed(0)} kcal'),
         );
       },
     );
   }
 }
 
-class _FoodEntryData {
-  final String name;
-  final double carbs;
-  final double protein;
-  final double fat;
-  final double calories;
-  final DateTime timestamp;
-  final String servingSize;
 
-  _FoodEntryData({
-    required this.name,
-    required this.carbs,
-    required this.protein,
-    required this.fat,
-    required this.calories,
-    required this.timestamp,
-    required this.servingSize,
-  });
-}
