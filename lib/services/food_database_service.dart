@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
@@ -84,6 +85,78 @@ class FoodDatabaseService {
         value TEXT
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS biomarkers (
+        date TEXT PRIMARY KEY,
+        glucose REAL,
+        bhb REAL,
+        weight REAL
+      )
+    ''');
+  }
+
+  // ─── SETTINGS METHODS ──────────────────────────────────────────────
+  // ... (keep existing settings methods)
+
+  // ─── BIOMARKER METHODS ──────────────────────────────────────────────
+
+  static Future<void> saveBiomarkers({
+    required DateTime date,
+    required double glucose,
+    required double bhb,
+    double? weight,
+  }) async {
+    final db = await database;
+    final dateStr = DateUtils.dateOnly(date).toIso8601String().split('T').first;
+    
+    await db.insert(
+      'biomarkers',
+      {
+        'date': dateStr,
+        'glucose': glucose,
+        'bhb': bhb,
+        'weight': weight,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  static Future<Map<String, dynamic>?> getBiomarkers(DateTime date) async {
+    final db = await database;
+    final dateStr = DateUtils.dateOnly(date).toIso8601String().split('T').first;
+
+    final maps = await db.query(
+      'biomarkers',
+      where: 'date = ?',
+      whereArgs: [dateStr],
+    );
+
+    if (maps.isNotEmpty) {
+      return maps.first;
+    }
+    return null;
+  }
+
+  static Future<List<Map<String, dynamic>>> getBiomarkersHistory(
+      DateTime startDate, int days) async {
+    final db = await database;
+    // We want the last N days up to startDate
+    // Actually typically we want [startDate - days, startDate]
+    // Let's assume startDate is the latest day.
+    
+    final end = DateUtils.dateOnly(startDate);
+    final start = end.subtract(Duration(days: days - 1));
+    
+    final startStr = start.toIso8601String().split('T').first;
+    final endStr = end.toIso8601String().split('T').first;
+
+    return db.query(
+      'biomarkers',
+      where: 'date BETWEEN ? AND ?',
+      whereArgs: [startStr, endStr],
+      orderBy: 'date DESC',
+    );
   }
 
   // ─── SETTINGS METHODS ──────────────────────────────────────────────

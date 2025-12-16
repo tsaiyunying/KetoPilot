@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../services/food_database_service.dart';
 import 'daily_log_provider.dart';
 
 @immutable
@@ -15,13 +16,43 @@ class WeeklyLogNotifier extends StateNotifier<WeeklyLogState> {
   WeeklyLogNotifier()
       : super(
           WeeklyLogState(days: _buildDefault7Days(DateTime.now())),
+        ) {
+    loadHistory();
+  }
+
+  Future<void> loadHistory() async {
+    final now = DateTime.now();
+    final data = await FoodDatabaseService.getBiomarkersHistory(now, 7);
+    
+    // Map DB data to state
+    final days = _buildDefault7Days(now);
+    
+    for (final row in data) {
+      final dateStr = row['date'] as String;
+      final date = DateTime.parse(dateStr);
+      
+      // Find matching day in window
+      final idx = days.indexWhere((d) => DateUtils.isSameDay(d.date, date));
+      if (idx != -1) {
+        days[idx] = days[idx].copyWith(
+          glucoseMgDl: row['glucose'] as double,
+          bhbMmol: row['bhb'] as double,
+          weightKg: row['weight'] as double?,
         );
+      }
+    }
+    
+    state = WeeklyLogState(days: List.unmodifiable(days));
+  }
 
   void upsertBiomarkersForToday({
     required double glucoseMgDl,
     required double bhbMmol,
     double? weightKg,
   }) {
+    // We don't save to DB here because DailyLogProvider handles the write.
+    // We just update local state to reflect change immediately (or could reload).
+    // Let's optimistic update.
     _upsertForDate(
       DateUtils.dateOnly(DateTime.now()),
       (old) => old.copyWith(

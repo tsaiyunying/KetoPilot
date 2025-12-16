@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/food_database_service.dart';
 
 @immutable
 class DailyLogState {
@@ -41,7 +42,27 @@ class DailyLogState {
 }
 
 class DailyLogNotifier extends StateNotifier<DailyLogState> {
-  DailyLogNotifier() : super(DailyLogState(date: DateUtils.dateOnly(DateTime.now())));
+  DailyLogNotifier() : super(DailyLogState(date: DateUtils.dateOnly(DateTime.now()))) {
+    loadDate(state.date);
+  }
+
+  Future<void> loadDate(DateTime date) async {
+    final cleanDate = DateUtils.dateOnly(date);
+    final data = await FoodDatabaseService.getBiomarkers(cleanDate);
+    
+    if (data != null) {
+      state = state.copyWith(
+        date: cleanDate,
+        glucoseMgDl: data['glucose'] as double,
+        bhbMmol: data['bhb'] as double,
+        weightKg: data['weight'] as double?,
+        clearWeight: data['weight'] == null,
+      );
+    } else {
+      // Reset if no data found for this date
+      state = DailyLogState(date: cleanDate);
+    }
+  }
 
   void setBiomarkers({
     required double glucoseMgDl,
@@ -49,17 +70,35 @@ class DailyLogNotifier extends StateNotifier<DailyLogState> {
     double? weightKg,
     DateTime? date,
   }) {
+    final cleanDate = DateUtils.dateOnly(date ?? state.date);
+    
+    // Optimistic Update
     state = state.copyWith(
-      date: DateUtils.dateOnly(date ?? DateTime.now()),
+      date: cleanDate,
       glucoseMgDl: glucoseMgDl,
       bhbMmol: bhbMmol,
       weightKg: weightKg,
       clearWeight: weightKg == null,
     );
+    
+    // Persist
+    FoodDatabaseService.saveBiomarkers(
+      date: cleanDate,
+      glucose: glucoseMgDl,
+      bhb: bhbMmol,
+      weight: weightKg,
+    );
   }
 
   void clearBiomarkers() {
     state = state.copyWith(glucoseMgDl: 0, bhbMmol: 0, clearWeight: true);
+    // Ideally delete from DB, or save as 0/null
+    FoodDatabaseService.saveBiomarkers(
+      date: state.date,
+      glucose: 0,
+      bhb: 0,
+      weight: null,
+    );
   }
 }
 
