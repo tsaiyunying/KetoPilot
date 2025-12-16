@@ -122,7 +122,7 @@ class FoodDatabaseService {
     final all = await getNutrientsForGramsByTags(
       foodCode,
       grams,
-      const ['CHOCDF', 'FIBTG', 'FAT', 'PROT', 'ENERC_KCAL', 'SUGAR'],
+      const ['CHOCDF', 'FIBTG', 'FAT', 'PROCNT', 'ENERC_KCAL', 'SUGAR'],
     );
 
     final carbs = all['CHOCDF'] ?? 0.0;
@@ -132,7 +132,7 @@ class FoodDatabaseService {
     return {
       'netCarbs': double.parse(netCarbs.toStringAsFixed(2)),
       'fat': all['FAT'] ?? 0.0,
-      'protein': all['PROT'] ?? 0.0,
+      'protein': all['PROCNT'] ?? 0.0,
       'calories': all['ENERC_KCAL'] ?? 0.0,
       'carbs': carbs,
       'fiber': fiber,
@@ -148,7 +148,7 @@ class FoodDatabaseService {
     final all = await getNutrientsForGramsByTags(
       foodCode,
       grams,
-      const ['CHOCDF', 'FIBTG', 'FAT', 'PROT', 'ENERC_KCAL'],
+      const ['CHOCDF', 'FIBTG', 'FAT', 'PROCNT', 'ENERC_KCAL'],
     );
 
     final carbs = all['CHOCDF'] ?? 0.0;
@@ -157,7 +157,7 @@ class FoodDatabaseService {
 
     return Macronutrients(
       carbs: carbs,
-      protein: all['PROT'] ?? 0.0,
+      protein: all['PROCNT'] ?? 0.0,
       fat: all['FAT'] ?? 0.0,
       fiber: fiber,
       netCarbs: netCarbs,
