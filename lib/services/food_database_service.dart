@@ -77,6 +77,37 @@ class FoodDatabaseService {
         meal_type TEXT
       )
     ''');
+    
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS user_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT
+      )
+    ''');
+  }
+
+  // ─── SETTINGS METHODS ──────────────────────────────────────────────
+
+  static Future<void> saveUserSetting(String key, String value) async {
+    final db = await database;
+    await db.insert(
+      'user_settings',
+      {'key': key, 'value': value},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  static Future<String?> getUserSetting(String key) async {
+    final db = await database;
+    final maps = await db.query(
+      'user_settings',
+      where: 'key = ?',
+      whereArgs: [key],
+    );
+    if (maps.isNotEmpty) {
+      return maps.first['value'] as String;
+    }
+    return null;
   }
 
   /// Search foods by name

@@ -58,7 +58,22 @@ class NutritionLogNotifier extends StateNotifier<NutritionLogState> {
   NutritionLogNotifier()
       : super(NutritionLogState(date: DateUtils.dateOnly(DateTime.now()))) {
     // Initial load
+    _loadSettings();
     loadDate(state.date);
+  }
+
+  Future<void> _loadSettings() async {
+    final carbs = await FoodDatabaseService.getUserSetting('carbs_target');
+    final protein = await FoodDatabaseService.getUserSetting('protein_target');
+    final fat = await FoodDatabaseService.getUserSetting('fat_target');
+
+    if (carbs != null || protein != null || fat != null) {
+      state = state.copyWith(
+        carbsTarget: carbs != null ? double.tryParse(carbs) : null,
+        proteinTarget: protein != null ? double.tryParse(protein) : null,
+        fatTarget: fat != null ? double.tryParse(fat) : null,
+      );
+    }
   }
 
   void setTargets({
@@ -71,6 +86,10 @@ class NutritionLogNotifier extends StateNotifier<NutritionLogState> {
       proteinTarget: protein,
       fatTarget: fat,
     );
+    // Persist
+    FoodDatabaseService.saveUserSetting('carbs_target', carbs.toString());
+    FoodDatabaseService.saveUserSetting('protein_target', protein.toString());
+    FoodDatabaseService.saveUserSetting('fat_target', fat.toString());
   }
 
   Future<void> loadDate(DateTime date) async {
