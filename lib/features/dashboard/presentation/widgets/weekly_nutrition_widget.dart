@@ -1,22 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:metabolicapp/core/themes/app_theme.dart';
+import 'package:metabolicapp/services/food_database_service.dart';
 
 class WeeklyNutritionWidget extends StatelessWidget {
   const WeeklyNutritionWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildLegend(),
-          const SizedBox(height: 16),
-          _buildChart(),
-          const SizedBox(height: 16),
-          _buildSummary(),
-        ],
-      ),
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: FoodDatabaseService.getWeeklyNutritionSummary(DateTime.now()),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        final weekData = snapshot.hasData ? snapshot.data! : _getEmptyWeekData();
+        
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildLegend(),
+              const SizedBox(height: 16),
+              _buildChart(weekData),
+              const SizedBox(height: 16),
+              _buildSummary(weekData),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -49,9 +62,7 @@ class WeeklyNutritionWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildChart() {
-    final weekData = _getWeekData();
-
+  Widget _buildChart(List<Map<String, dynamic>> weekData) {
     return Container(
       height: 140,
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -68,9 +79,14 @@ class WeeklyNutritionWidget extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: weekData.map((dayData) {
+              // Convert date string to day abbreviation
+              final dateStr = dayData['date'] as String;
+              final date = DateTime.parse(dateStr);
+              final dayLabel = DateFormat('EEE').format(date).substring(0, 1);
+              
               return Expanded(
                 child: Text(
-                  dayData['day'],
+                  dayLabel,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 10,
@@ -86,10 +102,29 @@ class WeeklyNutritionWidget extends StatelessWidget {
   }
 
   Widget _buildDayBar(Map<String, dynamic> dayData) {
-    final double carbs = dayData['carbs'];
-    final double protein = dayData['protein'];
-    final double fat = dayData['fat'];
+    final double carbs = (dayData['carbs'] as num?)?.toDouble() ?? 0.0;
+    final double protein = (dayData['protein'] as num?)?.toDouble() ?? 0.0;
+    final double fat = (dayData['fat'] as num?)?.toDouble() ?? 0.0;
     final double total = carbs + protein + fat;
+
+    if (total == 0) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 2),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Container(
+              width: 24,
+              height: 4,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                color: Colors.grey.shade300,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -118,14 +153,13 @@ class WeeklyNutritionWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildSummary() {
-    final weekData = _getWeekData();
+  Widget _buildSummary(List<Map<String, dynamic>> weekData) {
     final avgCarbs =
-        weekData.map((d) => d['carbs'] as double).reduce((a, b) => a + b) / 7;
+        weekData.map((d) => (d['carbs'] as num?)?.toDouble() ?? 0.0).reduce((a, b) => a + b) / 7;
     final avgProtein =
-        weekData.map((d) => d['protein'] as double).reduce((a, b) => a + b) / 7;
+        weekData.map((d) => (d['protein'] as num?)?.toDouble() ?? 0.0).reduce((a, b) => a + b) / 7;
     final avgFat =
-        weekData.map((d) => d['fat'] as double).reduce((a, b) => a + b) / 7;
+        weekData.map((d) => (d['fat'] as num?)?.toDouble() ?? 0.0).reduce((a, b) => a + b) / 7;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -192,15 +226,18 @@ class WeeklyNutritionWidget extends StatelessWidget {
     );
   }
 
-  List<Map<String, dynamic>> _getWeekData() {
-    return [
-      {'day': 'Mon', 'carbs': 45.0, 'protein': 85.0, 'fat': 65.0},
-      {'day': 'Tue', 'carbs': 52.0, 'protein': 78.0, 'fat': 58.0},
-      {'day': 'Wed', 'carbs': 38.0, 'protein': 92.0, 'fat': 72.0},
-      {'day': 'Thu', 'carbs': 41.0, 'protein': 88.0, 'fat': 60.0},
-      {'day': 'Fri', 'carbs': 47.0, 'protein': 82.0, 'fat': 68.0},
-      {'day': 'Sat', 'carbs': 35.0, 'protein': 75.0, 'fat': 55.0},
-      {'day': 'Sun', 'carbs': 42.0, 'protein': 80.0, 'fat': 62.0},
-    ];
+  List<Map<String, dynamic>> _getEmptyWeekData() {
+    final today = DateTime.now();
+    final result = <Map<String, dynamic>>[];
+    for (int i = 6; i >= 0; i--) {
+      final date = today.subtract(Duration(days: i));
+      result.add({
+        'date': date.toIso8601String().split('T').first,
+        'carbs': 0.0,
+        'protein': 0.0,
+        'fat': 0.0,
+      });
+    }
+    return result;
   }
 }

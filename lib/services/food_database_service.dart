@@ -385,4 +385,52 @@ class FoodDatabaseService {
       );
     }).toList();
   }
+
+  /// Get weekly nutrition summary (7 days ending on endDate)
+  /// Returns list of daily totals: [{date, carbs, protein, fat}, ...]
+  static Future<List<Map<String, dynamic>>> getWeeklyNutritionSummary(DateTime endDate) async {
+    final db = await database;
+    final end = DateUtils.dateOnly(endDate);
+    final start = end.subtract(const Duration(days: 6));
+    
+    final startMs = start.millisecondsSinceEpoch;
+    final endMs = DateTime(end.year, end.month, end.day, 23, 59, 59, 999).millisecondsSinceEpoch;
+    
+    final maps = await db.rawQuery('''
+      SELECT 
+        DATE(timestamp_ms / 1000, 'unixepoch', 'localtime') as date,
+        SUM(net_carbs) as carbs,
+        SUM(protein) as protein,
+        SUM(fat) as fat
+      FROM food_diary
+      WHERE timestamp_ms BETWEEN ? AND ?
+      GROUP BY date
+      ORDER BY date ASC
+    ''', [startMs, endMs]);
+    
+    // Create a map for quick lookup
+    final dataMap = <String, Map<String, dynamic>>{};
+    for (final row in maps) {
+      dataMap[row['date'] as String] = {
+        'carbs': (row['carbs'] as num?)?.toDouble() ?? 0.0,
+        'protein': (row['protein'] as num?)?.toDouble() ?? 0.0,
+        'fat': (row['fat'] as num?)?.toDouble() ?? 0.0,
+      };
+    }
+    
+    // Fill in all 7 days (even if no data)
+    final result = <Map<String, dynamic>>[];
+    for (int i = 0; i < 7; i++) {
+      final date = start.add(Duration(days: i));
+      final dateStr = date.toIso8601String().split('T').first;
+      result.add({
+        'date': dateStr,
+        'carbs': dataMap[dateStr]?['carbs'] ?? 0.0,
+        'protein': dataMap[dateStr]?['protein'] ?? 0.0,
+        'fat': dataMap[dateStr]?['fat'] ?? 0.0,
+      });
+    }
+    
+    return result;
+  }
 }
