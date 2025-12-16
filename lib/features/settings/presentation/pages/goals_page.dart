@@ -3,32 +3,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/themes/app_theme.dart';
-import '../../../../core/state/daily_log_provider.dart';
-import '../../../../core/state/weekly_log_provider.dart';
+import '../../../../core/state/nutrition_log_provider.dart';
 import '../../../../shared/widgets/app_drawer.dart';
 
-// ✅ ADD THIS IMPORT
-
-
 @RoutePage()
-class DataEntryPage extends ConsumerStatefulWidget {
-  const DataEntryPage({super.key});
+class GoalsPage extends ConsumerStatefulWidget {
+  const GoalsPage({super.key});
 
   @override
-  ConsumerState<DataEntryPage> createState() => _DataEntryPageState();
+  ConsumerState<GoalsPage> createState() => _GoalsPageState();
 }
 
-class _DataEntryPageState extends ConsumerState<DataEntryPage> {
-  // Biomarker controllers
-  final TextEditingController _glucoseController = TextEditingController();
-  final TextEditingController _bhbController = TextEditingController();
-  final TextEditingController _weightController = TextEditingController();
+class _GoalsPageState extends ConsumerState<GoalsPage> {
+  // Nutrition controllers
+  final TextEditingController _carbsController = TextEditingController();
+  final TextEditingController _proteinController = TextEditingController();
+  final TextEditingController _fatController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with current values
+    final current = ref.read(nutritionLogProvider);
+    _carbsController.text = current.carbsTarget.toStringAsFixed(0);
+    _proteinController.text = current.proteinTarget.toStringAsFixed(0);
+    _fatController.text = current.fatTarget.toStringAsFixed(0);
+  }
 
   @override
   void dispose() {
-    _glucoseController.dispose();
-    _bhbController.dispose();
-    _weightController.dispose();
+    _carbsController.dispose();
+    _proteinController.dispose();
+    _fatController.dispose();
     super.dispose();
   }
 
@@ -36,7 +42,7 @@ class _DataEntryPageState extends ConsumerState<DataEntryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Log Biomarkers'),
+        title: const Text('Nutrition Goals'),
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
       ),
@@ -47,12 +53,12 @@ class _DataEntryPageState extends ConsumerState<DataEntryPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionHeader(
-              'Daily Biomarkers',
-              'Log your metabolic measurements',
-              Icons.science,
+              'Daily Macronutrients',
+              'Set your daily targets',
+              Icons.flag_circle,
             ),
             const SizedBox(height: 16),
-            _buildBiomarkerInputSection(),
+            _buildMacroInputSection(),
             const SizedBox(height: 24),
             _buildActionButtons(),
           ],
@@ -102,30 +108,30 @@ class _DataEntryPageState extends ConsumerState<DataEntryPage> {
     );
   }
 
-  Widget _buildBiomarkerInputSection() {
+  Widget _buildMacroInputSection() {
     return Column(
       children: [
         Row(
           children: [
             Expanded(
-              child: _buildBiomarkerInputCard(
-                'Glucose',
-                'mg/dL',
-                _glucoseController,
-                Colors.orange.shade600,
-                'Target: <100',
-                Icons.water_drop,
+              child: _buildMacroInputCard(
+                'Carbs',
+                'grams',
+                _carbsController,
+                Colors.orange,
+                'Standard Keto: 20g',
+                Icons.grain,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildBiomarkerInputCard(
-                'BHB',
-                'mmol/L',
-                _bhbController,
-                Colors.yellow.shade700,
-                'Target: >0.5',
-                Icons.science,
+              child: _buildMacroInputCard(
+                'Protein',
+                'grams',
+                _proteinController,
+                Colors.blue,
+                'Moderate: 80-100g',
+                Icons.fitness_center,
               ),
             ),
           ],
@@ -134,13 +140,13 @@ class _DataEntryPageState extends ConsumerState<DataEntryPage> {
         Row(
           children: [
             Expanded(
-              child: _buildBiomarkerInputCard(
-                'Weight',
-                'kg',
-                _weightController,
-                Colors.blue.shade600,
-                'Optional',
-                Icons.scale,
+              child: _buildMacroInputCard(
+                'Fat',
+                'grams',
+                _fatController,
+                Colors.green,
+                'To Satiety',
+                Icons.opacity,
               ),
             ),
             const SizedBox(width: 12),
@@ -148,22 +154,19 @@ class _DataEntryPageState extends ConsumerState<DataEntryPage> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.05),
+                  color: Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppTheme.primaryColor.withOpacity(0.2),
-                  ),
+                  border: Border.all(color: Colors.grey.shade200),
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.calculate, color: AppTheme.primaryColor),
+                    Icon(Icons.info_outline, color: Colors.grey.shade600),
                     const SizedBox(height: 8),
                     Text(
-                      'GKI auto-calculated from glucose & BHB',
+                      'Adjust these based on your personal needs.',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade600,
                       ),
                     ),
                   ],
@@ -176,12 +179,12 @@ class _DataEntryPageState extends ConsumerState<DataEntryPage> {
     );
   }
 
-  Widget _buildBiomarkerInputCard(
+  Widget _buildMacroInputCard(
       String label,
       String unit,
       TextEditingController controller,
       Color color,
-      String target,
+      String hint,
       IconData icon,
       ) {
     return Container(
@@ -215,7 +218,7 @@ class _DataEntryPageState extends ConsumerState<DataEntryPage> {
               FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
             ],
             decoration: InputDecoration(
-              hintText: '0.0',
+              hintText: '0',
               suffixText: unit,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -237,7 +240,7 @@ class _DataEntryPageState extends ConsumerState<DataEntryPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            target,
+            hint,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: color.withOpacity(0.8),
               fontWeight: FontWeight.w500,
@@ -249,92 +252,43 @@ class _DataEntryPageState extends ConsumerState<DataEntryPage> {
   }
 
   Widget _buildActionButtons() {
-    return Column(
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: _saveData,
-            icon: const Icon(Icons.save),
-            label: const Text('Save Biomarker Data'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: _saveGoals,
+        icon: const Icon(Icons.save),
+        label: const Text('Save Goals'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.primaryColor,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _clearData,
-            icon: const Icon(Icons.clear),
-            label: const Text('Clear All'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  void _saveData() {
-    final glucose = _parseDouble(_glucoseController.text);
-    final bhb = _parseDouble(_bhbController.text);
-    final weightText = _weightController.text.trim();
-    final weight = weightText.isEmpty ? null : _parseDouble(weightText);
+  void _saveGoals() {
+    final carbsTarget = _parseDouble(_carbsController.text);
+    final proteinTarget = _parseDouble(_proteinController.text);
+    final fatTarget = _parseDouble(_fatController.text);
 
-    ref.read(dailyLogProvider.notifier).setBiomarkers(
-      glucoseMgDl: glucose,
-      bhbMmol: bhb,
-      weightKg: weight,
-    );
-    ref.read(weeklyLogProvider.notifier).upsertBiomarkersForToday(
-      glucoseMgDl: glucose,
-      bhbMmol: bhb,
-      weightKg: weight,
+    ref.read(nutritionLogProvider.notifier).setTargets(
+      carbs: carbsTarget,
+      protein: proteinTarget,
+      fat: fatTarget,
     );
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Biomarker data saved successfully!'),
+        content: const Text('Nutrition goals updated!'),
         backgroundColor: AppTheme.primaryColor,
-        action: SnackBarAction(
-          label: 'View Dashboard',
-          textColor: Colors.white,
-          onPressed: () => context.router.pushNamed('/dashboard'),
-        ),
       ),
     );
-
-    _clearInputs();
-  }
-
-  void _clearData() {
-    ref.read(dailyLogProvider.notifier).clearBiomarkers();
-    ref.read(weeklyLogProvider.notifier).clearBiomarkersForToday();
-    _clearInputs();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('All fields cleared'),
-        duration: Duration(seconds: 1),
-      ),
-    );
-  }
-
-  void _clearInputs() {
-    _glucoseController.clear();
-    _bhbController.clear();
-    _weightController.clear();
+    
+    // Optional: go to dashboard or just stay here
   }
 
   double _parseDouble(String input) {

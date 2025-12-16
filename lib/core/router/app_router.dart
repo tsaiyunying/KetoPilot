@@ -8,6 +8,8 @@ import '../../features/health_logging/presentation/pages/health_logging_page.dar
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 
+import '../../features/settings/presentation/pages/goals_page.dart';
+
 part 'app_router.gr.dart';
 
 @AutoRouterConfig()
@@ -23,6 +25,8 @@ class AppRouter extends _$AppRouter {
     AutoRoute(page: DataEntryRoute.page, path: '/data-entry'),
 
     AutoRoute(page: FoodDiaryRoute.page, path: '/food-diary'),
+    
+    AutoRoute(page: GoalsRoute.page, path: '/goals'),
 
     AutoRoute(page: HealthLoggingRoute.page, path: '/health-logging'),
 

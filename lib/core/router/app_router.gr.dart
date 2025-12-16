@@ -33,6 +33,12 @@ abstract class _$AppRouter extends RootStackRouter {
         child: const FoodDiaryPage(),
       );
     },
+    GoalsRoute.name: (routeData) {
+      return AutoRoutePage<dynamic>(
+        routeData: routeData,
+        child: const GoalsPage(),
+      );
+    },
     HealthLoggingRoute.name: (routeData) {
       return AutoRoutePage<dynamic>(
         routeData: routeData,
@@ -92,6 +98,20 @@ class FoodDiaryRoute extends PageRouteInfo<void> {
         );
 
   static const String name = 'FoodDiaryRoute';
+
+  static const PageInfo<void> page = PageInfo<void>(name);
+}
+
+/// generated route for
+/// [GoalsPage]
+class GoalsRoute extends PageRouteInfo<void> {
+  const GoalsRoute({List<PageRouteInfo>? children})
+      : super(
+          GoalsRoute.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'GoalsRoute';
 
   static const PageInfo<void> page = PageInfo<void>(name);
 }
